@@ -9,13 +9,17 @@
 #SBATCH --mail-type=all
 #SBATCH -A AST23034
 
-source $HOME/.bashrc
-source $HOME/miniconda3/etc/profile.d/conda.sh
+# source $HOME/.bashrc
+# source $HOME/miniconda3/etc/profile.d/conda.sh
 
-conda init bash
-conda activate $HOME/miniconda3/envs/py311
+# conda init bash
+# conda activate $HOME/miniconda3/envs/py311
 
-module unload python3
+# module unload python3
+
+module load hdf5
+module unload impi
+module load python3/3.9.2
 
 export QT_QPA_PLATFORM=offscreen
 
