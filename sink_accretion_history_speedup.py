@@ -603,7 +603,10 @@ class SnapshotGasProperties:
         for i in range(ndim):
             for j in range(ndim):
                 I[i,j] -= np.mean(dx[:,i] * dx[:,j])
-        w, v = np.linalg.eig(I)
+        try:
+            w, v = np.linalg.eig(I)
+        except np.linalg.LinAlgError:
+            breakpoint()
         R_p  = np.sqrt(w)
         #return np.max(R_p)/np.min(R_p), np.sum(R_p/R_p.max()), R_p
         return R_p  # array of principle components.
