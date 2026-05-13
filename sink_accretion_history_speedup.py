@@ -514,6 +514,7 @@ class SnapshotGasProperties:
     # Get indices of selected gas particles.
     def get_idx(self, gas_ids):
         num_excluded, unique_ids = self.get_unique_ids(gas_ids)
+        ##IS THIS LINE EVER ACTUALLY CALLED? UNIQUE_IDS SEEMS LIKE IT WOULD ALWAYS BE AN ARRAY(!!!)
         if np.isscalar(unique_ids):
             idx_g = np.where(self.p0_ids == unique_ids)[0][0]
         else:
@@ -768,10 +769,10 @@ class SnapshotGasProperties:
 
             # Get idx of unique accreted non-feedback gas particles.
             idx_g, num_feedback_new = self.get_idx(acc_gas_ids)
-            if sink_ID == 8899035:
-                breakpoint()
+            # if sink_ID == 8899035:
+            #     breakpoint()
 
-            if len(idx_g) == 0:
+            if (not np.any(idx_g)) or (len(idx_g) == 0):
                 continue
 
             # Get gas properties.
