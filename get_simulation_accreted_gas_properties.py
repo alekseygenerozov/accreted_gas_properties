@@ -50,7 +50,11 @@ for i in range(i_min, i_max + 1, 1):
     print("Writing snapshot {0:d}...".format(i), flush=True)
     s = SnapshotGasProperties(get_fname(i), cloud)
     all_data = s.get_all_gas_data(
-        acc_dict, use_all_sinks=True, sink_imin=sink_imin, sink_imax=sink_imax
+        acc_dict,
+        skip_potential=True,
+        use_all_sinks=True,
+        sink_imin=sink_imin,
+        sink_imax=sink_imax,
     )
     s.write_to_file(
         all_data, datadir, use_all_sinks=False, sink_imin=sink_imin, sink_imax=sink_imax
