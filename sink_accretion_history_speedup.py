@@ -463,6 +463,13 @@ class SnapshotGasProperties:
             self.p0_coord = np.vstack((self.p0_x, self.p0_y, self.p0_z)).T
             self.p0_vel = np.vstack((self.p0_u, self.p0_v, self.p0_w)).T
             self.p0_mag = np.vstack((self.p0_Bx, self.p0_By, self.p0_Bz)).T
+            # Create a global mapping of Particle ID -> Snapshot Index ONCE in __init__
+            # Find the maximum ID value to size our lookup array
+            max_id = int(np.max(self.p0_ids))
+            # Initialize with -1 (meaning "not found in this snapshot")
+            self.id_to_index = np.full(max_id + 1, -1, dtype=np.int64)
+            # Assign snapshot indices to their respective particle IDs
+            self.id_to_index[self.p0_ids] = np.arange(len(self.p0_ids))
 
     # Try to get snapshot number from filename.
     def get_i(self):
@@ -474,26 +481,24 @@ class SnapshotGasProperties:
 
     # Calculate gas mean molecular weight.
     def get_mean_molecular_weight(self, gas_ids):
-        idx_g = np.isin(self.p0_ids, gas_ids)
-        T_eff_atomic = (
-            1.23 * (5.0 / 3.0 - 1.0) * self.u_to_temp_units * self.p0_E_int[idx_g]
-        )
-        nH_cgs = self.p0_rho[idx_g] * self.nH_unit
+        # idx_g = np.isin(self.p0_ids, gas_ids)
+        T_eff_atomic = 1.23 * (5.0 / 3.0 - 1.0) * self.u_to_temp_units * self.p0_E_int
+        nH_cgs = self.p0_rho * self.nH_unit
         T_transition = self._DMIN(8000.0, nH_cgs)
         f_mol = 1.0 / (1.0 + T_eff_atomic**2 / T_transition**2)
         return 4.0 / (
-            1.0 + (3.0 + 4.0 * self.p0_Ne[idx_g] - 2.0 * f_mol) * self.HYDROGEN_MASSFRAC
+            1.0 + (3.0 + 4.0 * self.p0_Ne - 2.0 * f_mol) * self.HYDROGEN_MASSFRAC
         )
 
     # Return only those particle IDs in gas_ids which occur only once in
     # list of all matching snapshot particle IDs.
     def get_unique_ids(self, gas_ids):
-        mask_1 = np.isin(self.p0_ids, gas_ids)
-        matching_ids = self.p0_ids[mask_1]
-        u, c = np.unique(matching_ids, return_counts=True)
-        unique_ids = u[c == 1]
-        num_excluded = len(u) - len(unique_ids)
-        return num_excluded, unique_ids
+        valid_ids = gas_ids[gas_ids <= (len(self.id_to_index) - 1)]
+        gas_ids_index = self.id_to_index[valid_ids]
+        # 2. Filter out particles that don't exist in this snapshot (value is -1)
+        gas_ids_index = gas_ids_index[gas_ids_index >= 0]
+
+        return gas_ids_index, 0
 
     # Get mask based on gas_ids (include only unique IDs).
     def get_mask(self, gas_ids, verbose=False):
@@ -513,12 +518,8 @@ class SnapshotGasProperties:
 
     # Get indices of selected gas particles.
     def get_idx(self, gas_ids):
-        num_excluded, unique_ids = self.get_unique_ids(gas_ids)
-        ##IS THIS LINE EVER ACTUALLY CALLED? UNIQUE_IDS SEEMS LIKE IT WOULD ALWAYS BE AN ARRAY(!!!)
-        if np.isscalar(unique_ids):
-            idx_g = np.where(self.p0_ids == unique_ids)[0][0]
-        else:
-            idx_g = np.isin(self.p0_ids, unique_ids)
+        num_excluded, idx_g = self.get_unique_ids(gas_ids)
+
         return idx_g, num_excluded
 
     # Get center of mass for selected gas particles.
@@ -772,7 +773,7 @@ class SnapshotGasProperties:
             # if sink_ID == 8899035:
             #     breakpoint()
 
-            if (not np.any(idx_g)) or (len(idx_g) == 0):
+            if len(idx_g) == 0:
                 continue
 
             # Get gas properties.
