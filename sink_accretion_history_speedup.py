@@ -518,7 +518,7 @@ class SnapshotGasProperties:
 
     # Get indices of selected gas particles.
     def get_idx(self, gas_ids):
-        num_excluded, idx_g = self.get_unique_ids(gas_ids)
+        idx_g, num_excluded = self.get_unique_ids(gas_ids)
 
         return idx_g, num_excluded
 
