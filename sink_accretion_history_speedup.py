@@ -474,6 +474,7 @@ class SnapshotGasProperties:
             # 3. Compute unique IDs and counts using NumPy
             unique_ids, counts = np.unique(self.p0_ids, return_counts=True)
             # 4. Map the counts directly to their ID slots
+            self.id_counts = np.zeros(max_id + 1, dtype=np.int64)
             self.id_counts[unique_ids] = counts
 
     # Try to get snapshot number from filename.
