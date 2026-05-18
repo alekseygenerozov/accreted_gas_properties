@@ -1,4 +1,4 @@
-#!/usr/bin/env python3 -m cProfile -o get_gas.prof
+#!/usr/bin/env python3
 
 import numpy as np
 import sys
