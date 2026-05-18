@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 
-import numpy as np
-import sys
 import os
+import sys
+
+import numpy as np
 
 sys.path.append("/work/08381/nina_af/frontera/accreted_gas_properties")
 
 from sink_accretion_history_speedup import (
     Cloud,
-    SnapshotGasProperties,
     SinkAccretionHistory,
+    SnapshotGasProperties,
 )
 
 # bhdir     = '/scratch/08381/nina_af/M2e3_R3_S0_T1_B0.01_Res126_n2_sol0.5_42/output/blackhole_details/'

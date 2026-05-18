@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
-import os
 import glob
-import numpy as np
+import os
+
 import h5py
+import numpy as np
 import pytreegrav as pg
 
 
@@ -470,6 +471,10 @@ class SnapshotGasProperties:
             self.id_to_index = np.full(max_id + 1, -1, dtype=np.int64)
             # Assign snapshot indices to their respective particle IDs
             self.id_to_index[self.p0_ids] = np.arange(len(self.p0_ids))
+            # 3. Compute unique IDs and counts using NumPy
+            unique_ids, counts = np.unique(self.p0_ids, return_counts=True)
+            # 4. Map the counts directly to their ID slots
+            self.id_counts[unique_ids] = counts
 
     # Try to get snapshot number from filename.
     def get_i(self):
@@ -495,10 +500,14 @@ class SnapshotGasProperties:
     def get_unique_ids(self, gas_ids):
         valid_ids = gas_ids[gas_ids <= (len(self.id_to_index) - 1)]
         gas_ids_index = self.id_to_index[valid_ids]
-        # 2. Filter out particles that don't exist in this snapshot (value is -1)
+        ##Filter out particles that don't exist in this snapshot (value is -1)
+        valid_ids = valid_ids[gas_ids_index >= 0]
         gas_ids_index = gas_ids_index[gas_ids_index >= 0]
+        ##Getting rid of feedback cells
+        gas_ids_index_counts = self.id_counts[valid_ids]
+        gas_ids_index_nf = gas_ids_index[gas_ids_index_counts == 1]
 
-        return gas_ids_index, 0
+        return gas_ids_index_nf, len(gas_ids_index) - len(gas_ids_index_nf)
 
     # Get mask based on gas_ids (include only unique IDs).
     def get_mask(self, gas_ids, verbose=False):
@@ -706,7 +715,8 @@ class SnapshotGasProperties:
         E_kin = self.get_kinetic_energy(m, vel)
         E_mag = self.get_magnetic_energy(m, rho, B_mag)
         E_int = self.get_internal_energy(m, int_en)
-        N_inc = np.sum(idx_g)
+        N_inc = len(idx_g)
+        ##TO DO: CHECK WITH NINA ON DOUBLE-COUNTING(!)
         N_fb = num_feedback + num_feedback_new
 
         data[0] = M_tot  # Total mass.
