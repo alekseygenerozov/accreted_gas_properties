@@ -23,4 +23,5 @@ module load python3/3.9.2
 
 export QT_QPA_PLATFORM=offscreen
 
-./get_simulation_accreted_gas_properties.py
+# ./get_simulation_accreted_gas_properties.py
+python3 -m cProfile -o get_gas.prof get_simulation_accreted_gas_properties.py
