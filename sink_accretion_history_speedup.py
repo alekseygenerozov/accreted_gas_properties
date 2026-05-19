@@ -487,7 +487,6 @@ class SnapshotGasProperties:
 
     # Calculate gas mean molecular weight.
     def get_mean_molecular_weight(self, gas_ids):
-        # idx_g = np.isin(self.p0_ids, gas_ids)
         T_eff_atomic = 1.23 * (5.0 / 3.0 - 1.0) * self.u_to_temp_units * self.p0_E_int
         nH_cgs = self.p0_rho * self.nH_unit
         T_transition = self._DMIN(8000.0, nH_cgs)
@@ -679,7 +678,7 @@ class SnapshotGasProperties:
 
         if verbose:
             print("Getting number of gas particles...", flush=True)
-            num_particles = np.sum(idx_g)
+            num_particles = len(idx_g)
             print("Analyzing {0:d} particles.".format(num_particles), flush=True)
 
         # Speedup: get idx_g once, get m, v, etc. once, and pass as arguments
@@ -781,9 +780,6 @@ class SnapshotGasProperties:
 
             # Get idx of unique accreted non-feedback gas particles.
             idx_g, num_feedback_new = self.get_idx(acc_gas_ids)
-            # if sink_ID == 8899035:
-            #     breakpoint()
-
             if len(idx_g) == 0:
                 continue
 

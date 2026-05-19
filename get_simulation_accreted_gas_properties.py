@@ -40,10 +40,10 @@ def get_fname(i, snapdir=snapdir):
 
 
 # Set snapshot range (later: pass as argument/detect from snapshot directory?)
-i_min, i_max = 0, 5  # fiducial_42
+i_min, i_max = 0, 489  # fiducial_42
 
 # Set sink particle range (split into batches of ~20 sink particles).
-sink_imin, sink_imax = 1322, 1325
+sink_imin, sink_imax = 0, 99
 
 # Loop over snapshots.
 for i in range(i_min, i_max + 1, 1):
@@ -52,8 +52,8 @@ for i in range(i_min, i_max + 1, 1):
     s = SnapshotGasProperties(get_fname(i), cloud)
     all_data = s.get_all_gas_data(
         acc_dict,
-        skip_potential=True,
-        use_all_sinks=False,
+        skip_potential=False,
+        use_all_sinks=True,
         sink_imin=sink_imin,
         sink_imax=sink_imax,
     )
