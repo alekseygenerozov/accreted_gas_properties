@@ -472,23 +472,25 @@ class SnapshotGasProperties:
 
             # PartType0 data.
             self.p0_ids = p0["ParticleIDs"][()]  # Particle IDs.
-            self.p0_m = p0["Masses"][()]  # Masses.
-            self.p0_rho = p0["Density"][()]  # Density.
-            self.p0_hsml = p0["SmoothingLength"][()]  # Particle smoothing length.
-            self.p0_E_int = p0["InternalEnergy"][()]  # Internal energy.
-            self.p0_P = p0["Pressure"][()]  # Pressure.
-            self.p0_cs = p0["SoundSpeed"][()]  # Sound speed.
-            self.p0_x = p0["Coordinates"][()][:, 0]  # Coordinates.
-            self.p0_y = p0["Coordinates"][()][:, 1]
-            self.p0_z = p0["Coordinates"][()][:, 2]
-            self.p0_u = p0["Velocities"][()][:, 0]  # Velocities.
-            self.p0_v = p0["Velocities"][()][:, 1]
-            self.p0_w = p0["Velocities"][()][:, 2]
+            self.p0_m = p0["Masses"][()].astype(float)  # Masses.
+            self.p0_rho = p0["Density"][()].astype(float)  # Density.
+            self.p0_hsml = p0["SmoothingLength"][()].astype(
+                float
+            )  # Particle smoothing length.
+            self.p0_E_int = p0["InternalEnergy"][()].astype(float)  # Internal energy.
+            self.p0_P = p0["Pressure"][()].astype(float)  # Pressure.
+            self.p0_cs = p0["SoundSpeed"][()].astype(float)  # Sound speed.
+            self.p0_x = p0["Coordinates"][()][:, 0].astype(float)  # Coordinates.
+            self.p0_y = p0["Coordinates"][()][:, 1].astype(float)
+            self.p0_z = p0["Coordinates"][()][:, 2].astype(float)
+            self.p0_u = p0["Velocities"][()][:, 0].astype(float)  # Velocities.
+            self.p0_v = p0["Velocities"][()][:, 1].astype(float)
+            self.p0_w = p0["Velocities"][()][:, 2].astype(float)
             self.p0_Ne = p0["ElectronAbundance"][()]  # Electron abundance.
             if "MagneticField" in p0.keys():  # Magnetic field.
-                self.p0_Bx = p0["MagneticField"][()][:, 0]
-                self.p0_By = p0["MagneticField"][()][:, 1]
-                self.p0_Bz = p0["MagneticField"][()][:, 2]
+                self.p0_Bx = p0["MagneticField"][()][:, 0].astype(float)
+                self.p0_By = p0["MagneticField"][()][:, 1].astype(float)
+                self.p0_Bz = p0["MagneticField"][()][:, 2].astype(float)
                 self.p0_B_mag = np.sqrt(self.p0_Bx**2 + self.p0_By**2 + self.p0_Bz**2)
             else:
                 self.p0_Bx = np.zeros(len(self.p0_ids))
@@ -498,16 +500,18 @@ class SnapshotGasProperties:
 
             # Hydrogen number density and total metallicity.
             self.p0_n_H = (1.0 / self.PROTONMASS_CGS) * np.multiply(
-                self.p0_rho * self.rho_unit, 1.0 - p0["Metallicity"][()][:, 0]
+                self.p0_rho * self.rho_unit,
+                1.0 - p0["Metallicity"][()][:, 0].astype(float),
             )
-            self.p0_total_metallicity = p0["Metallicity"][()][:, 0]
+            self.p0_total_metallicity = p0["Metallicity"][()][:, 0].astype(float)
             # Calculate mean molecular weight.
             self.p0_mean_molecular_weight = self.get_mean_molecular_weight(self.p0_ids)
 
             # Neutral hydrogen abundance, molecular mass fraction.
-            self.p0_neutral_H_abundance = p0["NeutralHydrogenAbundance"][()]
-            self.p0_molecular_mass_frac = p0["MolecularMassFraction"][()]
-            breakpoint()
+            self.p0_neutral_H_abundance = p0["NeutralHydrogenAbundance"][()].astype(
+                float
+            )
+            self.p0_molecular_mass_frac = p0["MolecularMassFraction"][()].astype(float)
 
             # Calculate gas adiabatic index and temperature.
             fH, f, xe = self.HYDROGEN_MASSFRAC, self.p0_molecular_mass_frac, self.p0_Ne
