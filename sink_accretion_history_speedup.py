@@ -7,6 +7,26 @@ import h5py
 import numpy as np
 import pytreegrav as pg
 
+GAS_DATA_DTYPE = [
+    ("sink_id", np.int64),
+    ("M_tot", np.float64),
+    ("x_cm", np.float64, (3,)),
+    ("v_cm", np.float64, (3,)),
+    ("L_vec", np.float64, (3,)),
+    ("R_eff", np.float64),
+    ("R_p", np.float64, (3,)),
+    ("T", np.float64),
+    ("B", np.float64),
+    ("Ne", np.float64),
+    ("sig_3D", np.float64),
+    ("E_grav", np.float64),
+    ("E_kin", np.float64),
+    ("E_mag", np.float64),
+    ("E_int", np.float64),
+    ("included_particle_number", np.int64),
+    ("feedback_particle_number", np.int64),
+]
+
 
 class SinkAccretionHistory:
     """
@@ -672,9 +692,11 @@ class SnapshotGasProperties:
     def get_gas_data(
         self, idx_g, num_feedback, num_feedback_new, skip_potential=False, verbose=True
     ):
-        data = np.zeros(
-            24
-        )  # Exclude M_fb (not relevant new method for identifying feedback).
+        fields = [f for f in GAS_DATA_DTYPE if f[0] != 'sink_id']
+        data = np.zeros(1, dtype=fields)[0]
+        # data = np.zeros(
+        #     24
+        # )  # Exclude M_fb (not relevant new method for identifying feedback).
 
         if verbose:
             print("Getting number of gas particles...", flush=True)
@@ -719,22 +741,24 @@ class SnapshotGasProperties:
         ##TO DO: CHECK WITH NINA ON DOUBLE-COUNTING(!)
         N_fb = num_feedback + num_feedback_new
 
-        data[0] = M_tot  # Total mass.
-        data[1:4] = x_cm  # Center of mass coordinates.
-        data[4:7] = v_cm  # Center of mass velocity.
-        data[7:10] = L_vec  # Specific angular momentum with respect to center of mass.
-        data[10] = R_eff  # Effective radius.
-        data[11:14] = R_p  # Shape parameters (PCA).
-        data[14] = T  # Average temperature.
-        data[15] = B  # Average magnetic field magnitude (may need to use volume).
-        data[16] = Ne  # Average number e- per H nucleon.
-        data[17] = sig3D  # Average velocity dispersion.
-        data[18] = E_grav  # Gravitational potential energy.
-        data[19] = E_kin  # Kinetic energy.
-        data[20] = E_mag  # Magnetic energy.
-        data[21] = E_int  # Internal energy (temperature proxy).
-        data[22] = N_inc  # Number of gas particles included in calculations.
-        data[23] = (
+        data["M_tot"] = M_tot  # Total mass.
+        data["x_cm"] = x_cm  # Center of mass coordinates.
+        data["v_cm"] = v_cm  # Center of mass velocity.
+        data["L_vec"] = (
+            L_vec  # Specific angular momentum with respect to center of mass.
+        )
+        data["R_eff"] = R_eff  # Effective radius.
+        data["R_p"] = R_p  # Shape parameters (PCA).
+        data["T"] = T  # Average temperature.
+        data["B"] = B  # Average magnetic field magnitude (may need to use volume).
+        data["Ne"] = Ne  # Average number e- per H nucleon.
+        data["sig3D"] = sig3D  # Average velocity dispersion.
+        data["E_grav"] = E_grav  # Gravitational potential energy.
+        data["E_kin"] = E_kin  # Kinetic energy.
+        data["E_mag"] = E_mag  # Magnetic energy.
+        data["E_int"] = E_int  # Internal energy (temperature proxy).
+        data["N_inc"] = N_inc  # Number of gas particles included in calculations.
+        data["N_fb"] = (
             N_fb  # Number of gas particles excluded due to being (presumed) feedback particles.
         )
 
@@ -766,7 +790,9 @@ class SnapshotGasProperties:
                 flush=True,
             )
 
-        all_data = np.zeros((num_sinks, 25))  # Entry 0: sink ID.
+        # all_data = np.zeros((num_sinks, 25))  # Entry 0: sink ID.
+        # Initialize the global structured tracking array
+        all_data = np.zeros(num_sinks, dtype=GAS_DATA_DTYPE)
 
         # Loop over unique sinks.
         for j, sink_ID in enumerate(sink_IDs):
@@ -787,8 +813,12 @@ class SnapshotGasProperties:
             data = self.get_gas_data(
                 idx_g, num_feedback, num_feedback_new, skip_potential=skip_potential
             )
-            all_data[j, 0] = sink_ID  # Record sink ID.
-            all_data[j, 1:] = data
+            # all_data[j, 0] = sink_ID  # Record sink ID.
+            # all_data[j, 1:] = data
+            # Save the sink_id, and assign the rest of the fields simultaneously
+            all_data[j]['sink_id'] = sink_ID
+            for field in data.dtype.names:
+                all_data[j][field] = data[field]
 
         return all_data
 
@@ -797,23 +827,23 @@ class SnapshotGasProperties:
         self, all_data, datadir, use_all_sinks=True, sink_imin=None, sink_imax=None
     ):
 
-        sink_IDs = all_data[:, 0]
-        M_tot = all_data[:, 1]
-        x_cm = all_data[:, 2:5]
-        v_cm = all_data[:, 5:8]
-        L_vec = all_data[:, 8:11]
-        R_eff = all_data[:, 11]
-        R_p = all_data[:, 12:15]
-        T = all_data[:, 15]
-        B = all_data[:, 16]
-        Ne = all_data[:, 17]
-        sig3D = all_data[:, 18]
-        E_grav = all_data[:, 19]
-        E_kin = all_data[:, 20]
-        E_mag = all_data[:, 21]
-        E_int = all_data[:, 22]
-        N_inc = all_data[:, 23]
-        N_fb = all_data[:, 24]
+        # sink_IDs = all_data[:, 0]
+        # M_tot = all_data[:, 1]
+        # x_cm = all_data[:, 2:5]
+        # v_cm = all_data[:, 5:8]
+        # L_vec = all_data[:, 8:11]
+        # R_eff = all_data[:, 11]
+        # R_p = all_data[:, 12:15]
+        # T = all_data[:, 15]
+        # B = all_data[:, 16]
+        # Ne = all_data[:, 17]
+        # sig3D = all_data[:, 18]
+        # E_grav = all_data[:, 19]
+        # E_kin = all_data[:, 20]
+        # E_mag = all_data[:, 21]
+        # E_int = all_data[:, 22]
+        # N_inc = all_data[:, 23]
+        # N_fb = all_data[:, 24]
         # M_fb     = all_data[:, 25]
 
         i = self.get_i()
@@ -840,23 +870,27 @@ class SnapshotGasProperties:
         header.attrs.create("B_unit", self.B_unit, dtype=float)
 
         # Sink IDs dataset.
-        f.create_dataset("sink_IDs", data=sink_IDs, dtype=int)
-        f.create_dataset("M_tot", data=M_tot)
-        f.create_dataset("X_cm", data=x_cm)
-        f.create_dataset("V_cm", data=v_cm)
-        f.create_dataset("specific_angular_momentum", data=L_vec)
-        f.create_dataset("effective_radius", data=R_eff)
-        f.create_dataset("aspect_ratio", data=R_p)
-        f.create_dataset("temperature", data=T)
-        f.create_dataset("magnetic_field_strength", data=B)
-        f.create_dataset("electron_abundance", data=Ne)
-        f.create_dataset("velocity_dispersion", data=sig3D)
-        f.create_dataset("potential_energy", data=E_grav)
-        f.create_dataset("kinetic_energy", data=E_kin)
-        f.create_dataset("magnetic_energy", data=E_mag)
-        f.create_dataset("internal_energy", data=E_int)
-        f.create_dataset("included_particle_number", data=N_inc, dtype=int)
-        f.create_dataset("feedback_particle_number", data=N_fb, dtype=int)
+        # f.create_dataset("sink_IDs", data=sink_IDs, dtype=int)
+        # f.create_dataset("M_tot", data=M_tot)
+        # f.create_dataset("X_cm", data=x_cm)
+        # f.create_dataset("V_cm", data=v_cm)
+        # f.create_dataset("specific_angular_momentum", data=L_vec)
+        # f.create_dataset("effective_radius", data=R_eff)
+        # f.create_dataset("aspect_ratio", data=R_p)
+        # f.create_dataset("temperature", data=T)
+        # f.create_dataset("magnetic_field_strength", data=B)
+        # f.create_dataset("electron_abundance", data=Ne)
+        # f.create_dataset("velocity_dispersion", data=sig3D)
+        # f.create_dataset("potential_energy", data=E_grav)
+        # f.create_dataset("kinetic_energy", data=E_kin)
+        # f.create_dataset("magnetic_energy", data=E_mag)
+        # f.create_dataset("internal_energy", data=E_int)
+        # f.create_dataset("included_particle_number", data=N_inc, dtype=int)
+        # f.create_dataset("feedback_particle_number", data=N_fb, dtype=int)
+        for field_name in all_data.dtype.names:
+            # Custom tweak: if you want HDF5 naming to be 'sink_IDs' instead of 'sink_id'
+            hdf5_name = "sink_IDs" if field_name == "sink_id" else field_name
+            f.create_dataset(hdf5_name, data=all_data[field_name])
 
         f.close()
 
