@@ -709,9 +709,11 @@ class SnapshotGasProperties:
         try:
             assert np.isclose(np.average(X, weights=w), self.weight_avg(X, w))
             ##NOTE: USE DDOF=1 TO GET AN UNBIASED ESTIMATOR OF THE STANDARD DEVIATION(!)
-            assert np.isclose(np.sqrt(np.cov(X, aweights=w, ddof=0)), self.weight_std(X, w))
+            assert np.isclose(
+                np.sqrt(np.cov(X, aweights=w, ddof=0)), self.weight_std(X, w)
+            )
         except AssertionError:
-            btr
+            breakpoint()
         return (
             np.average(X, weights=w),
             np.sqrt(np.cov(X, aweights=w, ddof=0)),
