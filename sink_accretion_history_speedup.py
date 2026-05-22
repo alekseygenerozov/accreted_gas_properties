@@ -507,6 +507,7 @@ class SnapshotGasProperties:
             # Neutral hydrogen abundance, molecular mass fraction.
             self.p0_neutral_H_abundance = p0["NeutralHydrogenAbundance"][()]
             self.p0_molecular_mass_frac = p0["MolecularMassFraction"][()]
+            breakpoint()
 
             # Calculate gas adiabatic index and temperature.
             fH, f, xe = self.HYDROGEN_MASSFRAC, self.p0_molecular_mass_frac, self.p0_Ne
