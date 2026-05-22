@@ -5,19 +5,40 @@ import os
 
 import h5py
 import numpy as np
+import pandas as pd
 import pytreegrav as pg
 
 GAS_DATA_DTYPE = [
     ("sink_id", np.int64),
     ("M_tot", np.float64),
-    ("x_cm", np.float64, (3,)),
-    ("v_cm", np.float64, (3,)),
-    ("L_vec", np.float64, (3,)),
+    ("x_cm_1", np.float64),
+    ("x_cm_2", np.float64),
+    ("x_cm_3", np.float64),
+    ("v_cm_1", np.float64),
+    ("v_cm_2", np.float64),
+    ("v_cm_3", np.float64),
+    ("L_vec_1", np.float64),
+    ("L_vec_2", np.float64),
+    ("L_vec_3", np.float64),
     ("R_eff", np.float64),
-    ("R_p", np.float64, (3,)),
+    ("R_p_1", np.float64),
+    ("R_p_2", np.float64),
+    ("R_p_3", np.float64),
     ("T", np.float64),
+    ("T_std", np.float64),
+    ("T_16", np.float64),
+    ("T_med", np.float64),
+    ("T_84", np.float64),
     ("B", np.float64),
+    ("B_std", np.float64),
+    ("B_16", np.float64),
+    ("B_med", np.float64),
+    ("B_84", np.float64),
     ("Ne", np.float64),
+    ("Ne_std", np.float64),
+    ("Ne_16", np.float64),
+    ("Ne_med", np.float64),
+    ("Ne_84", np.float64),
     ("sig_3D", np.float64),
     ("E_grav", np.float64),
     ("E_kin", np.float64),
@@ -656,18 +677,26 @@ class SnapshotGasProperties:
         E_int = np.sum(m * int_en)
         return E_int
 
-    # Get average (mass-weighted) temperature [K].
-    def get_average_temperature(self, m, T_K):
-        return self.weight_avg(T_K, m)
+    def get_complete_stats(self, X, w=None):
+        assert np.isclose(np.average(X, weights=w), self.weight_avg(X, w))
+        ##NOTE: USE DDOF=1 TO GET AN UNBIASED ESTIMATOR OF THE STANDARD DEVIATION(!)
+        assert np.isclose(np.sqrt(np.cov(X, aweights=w, ddof=0)), self.weight_std(X, w))
+        np.average(X, weights=w), np.sqrt(np.cov(X, aweights=w, ddof=0)), np.percentile(
+            X, 16, weights=w
+        ), np.percentile(X, 50, weights=w), np.percentile(X, 84, weights=w)
+
+    # Get average (wass-weighted) temperature [K].
+    def get_average_temperature(self, m, T_k):
+        return self.get_complete_stats(T_k, w=m)
 
     # Get average (mass-weighted) magnetic field strength [gauss].
     def get_average_magnetic_field(self, m, B_mag):
-        return self.weight_avg(B_mag, m)
+        return self.get_complete_stats(B_mag, w=m)
 
     # TO-DO: get average ionization fraction. For now, just get
     # average number of electrons per H nucleon.
     def get_average_electron_abundance(self, m, elec):
-        return self.weight_avg(elec, m)
+        return self.get_complete_stats(elec, w=m)
 
     # Get aspect ratio of selected gas particles (prinicpal component analysis).
     def get_aspect_ratio(self, m, pos):
@@ -692,7 +721,7 @@ class SnapshotGasProperties:
     def get_gas_data(
         self, idx_g, num_feedback, num_feedback_new, skip_potential=False, verbose=True
     ):
-        fields = [f for f in GAS_DATA_DTYPE if f[0] != 'sink_id']
+        fields = [f for f in GAS_DATA_DTYPE if f[0] != "sink_id"]
         data = np.zeros(1, dtype=fields)[0]
         # data = np.zeros(
         #     24
@@ -742,16 +771,26 @@ class SnapshotGasProperties:
         N_fb = num_feedback + num_feedback_new
 
         data["M_tot"] = M_tot  # Total mass.
-        data["x_cm"] = x_cm  # Center of mass coordinates.
-        data["v_cm"] = v_cm  # Center of mass velocity.
-        data["L_vec"] = (
+        data["x_cm_1"], data["x_cm_2"], data["x_cm_3"] = (
+            x_cm  # Center of mass coordinates.
+        )
+        data["v_cm_1"], data["v_cm_2"], data["v_cm_3"] = (
+            v_cm  # Center of mass velocity.
+        )
+        data["L_vec_1"], data["L_vec_2"], data["L_vec_3"] = (
             L_vec  # Specific angular momentum with respect to center of mass.
         )
         data["R_eff"] = R_eff  # Effective radius.
-        data["R_p"] = R_p  # Shape parameters (PCA).
-        data["T"] = T  # Average temperature.
-        data["B"] = B  # Average magnetic field magnitude (may need to use volume).
-        data["Ne"] = Ne  # Average number e- per H nucleon.
+        data["R_p_1"], data["R_p_2"], data["R_p_2"] = R_p  # Shape parameters (PCA).
+        data["T"], data["T_std"], data["T_16"], data["T_med"], data["T_84"] = (
+            T  # temperature stats
+        )
+        data["B"], data["B_std"], data["B_16"], data["B_med"], data["B_84"] = (
+            B  # Average magnetic field magnitude (may need to use volume).
+        )
+        data["Ne"], data["Ne_std"], data["Ne_16"], data["Ne_med"], data["Ne_84"] = (
+            Ne  # Average number e- per H nucleon.
+        )
         data["sig3D"] = sig3D  # Average velocity dispersion.
         data["E_grav"] = E_grav  # Gravitational potential energy.
         data["E_kin"] = E_kin  # Kinetic energy.
@@ -816,7 +855,7 @@ class SnapshotGasProperties:
             # all_data[j, 0] = sink_ID  # Record sink ID.
             # all_data[j, 1:] = data
             # Save the sink_id, and assign the rest of the fields simultaneously
-            all_data[j]['sink_id'] = sink_ID
+            all_data[j]["sink_id"] = sink_ID
             for field in data.dtype.names:
                 all_data[j][field] = data[field]
 
@@ -827,72 +866,28 @@ class SnapshotGasProperties:
         self, all_data, datadir, use_all_sinks=True, sink_imin=None, sink_imax=None
     ):
 
-        # sink_IDs = all_data[:, 0]
-        # M_tot = all_data[:, 1]
-        # x_cm = all_data[:, 2:5]
-        # v_cm = all_data[:, 5:8]
-        # L_vec = all_data[:, 8:11]
-        # R_eff = all_data[:, 11]
-        # R_p = all_data[:, 12:15]
-        # T = all_data[:, 15]
-        # B = all_data[:, 16]
-        # Ne = all_data[:, 17]
-        # sig3D = all_data[:, 18]
-        # E_grav = all_data[:, 19]
-        # E_kin = all_data[:, 20]
-        # E_mag = all_data[:, 21]
-        # E_int = all_data[:, 22]
-        # N_inc = all_data[:, 23]
-        # N_fb = all_data[:, 24]
-        # M_fb     = all_data[:, 25]
-
         i = self.get_i()
 
         if use_all_sinks:
             fname = os.path.join(
-                datadir, "snapshot_{0:03d}_accreted_gas_properties.hdf5".format(i)
+                datadir, "snapshot_{0:03d}_accreted_gas_properties.pq".format(i)
             )
         else:
             fname = os.path.join(
                 datadir,
-                "snapshot_{0:03d}_accreted_gas_properties_range_{1:d}_{2:d}.hdf5".format(
+                "snapshot_{0:03d}_accreted_gas_properties_range_{1:d}_{2:d}.pq".format(
                     i, sink_imin, sink_imax
                 ),
             )
+        all_data = pd.DataFrame(data=all_data)
+        all_data.attrs["time"] = self.t
+        all_data.attrs["m_unit"] = self.m_unit
+        all_data.attrs["l_unit"] = self.l_unit
+        all_data.attrs["v_unit"] = self.v_unit
+        all_data.attrs["t_unit"] = self.t_unit
+        all_data.attrs["B_unit"] = self.B_unit
 
-        f = h5py.File(fname, "w")
-        header = f.create_dataset("header", (1,))
-        header.attrs.create("time", self.t, dtype=float)
-        header.attrs.create("m_unit", self.m_unit, dtype=float)
-        header.attrs.create("l_unit", self.l_unit, dtype=float)
-        header.attrs.create("v_unit", self.v_unit, dtype=float)
-        header.attrs.create("t_unit", self.t_unit, dtype=float)
-        header.attrs.create("B_unit", self.B_unit, dtype=float)
-
-        # Sink IDs dataset.
-        # f.create_dataset("sink_IDs", data=sink_IDs, dtype=int)
-        # f.create_dataset("M_tot", data=M_tot)
-        # f.create_dataset("X_cm", data=x_cm)
-        # f.create_dataset("V_cm", data=v_cm)
-        # f.create_dataset("specific_angular_momentum", data=L_vec)
-        # f.create_dataset("effective_radius", data=R_eff)
-        # f.create_dataset("aspect_ratio", data=R_p)
-        # f.create_dataset("temperature", data=T)
-        # f.create_dataset("magnetic_field_strength", data=B)
-        # f.create_dataset("electron_abundance", data=Ne)
-        # f.create_dataset("velocity_dispersion", data=sig3D)
-        # f.create_dataset("potential_energy", data=E_grav)
-        # f.create_dataset("kinetic_energy", data=E_kin)
-        # f.create_dataset("magnetic_energy", data=E_mag)
-        # f.create_dataset("internal_energy", data=E_int)
-        # f.create_dataset("included_particle_number", data=N_inc, dtype=int)
-        # f.create_dataset("feedback_particle_number", data=N_fb, dtype=int)
-        for field_name in all_data.dtype.names:
-            # Custom tweak: if you want HDF5 naming to be 'sink_IDs' instead of 'sink_id'
-            hdf5_name = "sink_IDs" if field_name == "sink_id" else field_name
-            f.create_dataset(hdf5_name, data=all_data[field_name])
-
-        f.close()
+        all_data.to_parquet(fname)
 
     # Utility functions.
     def weight_avg(self, data, weights):
