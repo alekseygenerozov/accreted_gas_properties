@@ -707,7 +707,9 @@ class SnapshotGasProperties:
 
     def get_complete_stats(self, X, w=None):
         try:
-            assert np.isclose(np.average(X, weights=w), self.weight_avg(X, w), rlim=1e-3)
+            assert np.isclose(
+                np.average(X, weights=w), self.weight_avg(X, w), rtol=1e-3
+            )
             ##NOTE: USE DDOF=1 TO GET AN UNBIASED ESTIMATOR OF THE STANDARD DEVIATION(!)
             assert np.isclose(
                 np.sqrt(np.cov(X, aweights=w, ddof=0)), self.weight_std(X, w), rtol=1e-3
