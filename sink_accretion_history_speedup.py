@@ -784,7 +784,7 @@ class SnapshotGasProperties:
         T = self.get_average_temperature(m, T_K)
         B = self.get_average_magnetic_field(m, B_mag)
         Ne = self.get_average_electron_abundance(m, elec)
-        sig3D = self.get_velocity_dispersion(m, vel)
+        sig_3D = self.get_velocity_dispersion(m, vel)
         if skip_potential:
             if verbose:
                 print("Skipping potential energy calculation...", flush=True)
@@ -823,7 +823,7 @@ class SnapshotGasProperties:
         data["Ne"], data["Ne_std"], data["Ne_16"], data["Ne_med"], data["Ne_84"] = (
             Ne  # Average number e- per H nucleon.
         )
-        data["sig3D"] = sig3D  # Average velocity dispersion.
+        data["sig_3D"] = sig_3D  # Average velocity dispersion.
         data["E_grav"] = E_grav  # Gravitational potential energy.
         data["E_kin"] = E_kin  # Kinetic energy.
         data["E_mag"] = E_mag  # Magnetic energy.
