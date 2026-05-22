@@ -785,10 +785,10 @@ class SnapshotGasProperties:
         L_vec = L_mag * L_unit_vec
         R_eff = self.get_effective_radius(m, rho)
         R_p = self.get_aspect_ratio(m, pos)
-        T = self.get_complete_stats(T_K, w=m)
-        B = self.get_complete_stats(B_mag, w=m)
-        Ne = self.get_complete_stats(elec, w=m)
-        rho = self.get_complete_stats(self.p0_rho[idx_g], w=m)
+        T_stats = self.get_complete_stats(T_K, w=m)
+        B_stats = self.get_complete_stats(B_mag, w=m)
+        Ne_stats = self.get_complete_stats(elec, w=m)
+        rho_stats = self.get_complete_stats(self.p0_rho[idx_g], w=m)
         sig_3D = self.get_velocity_dispersion(m, vel)
         if skip_potential:
             if verbose:
@@ -820,13 +820,13 @@ class SnapshotGasProperties:
         data["R_eff"] = R_eff  # Effective radius.
         data["R_p_1"], data["R_p_2"], data["R_p_2"] = R_p  # Shape parameters (PCA).
         data["T"], data["T_std"], data["T_16"], data["T_med"], data["T_84"] = (
-            T  # temperature stats
+            T_stats  # temperature stats
         )
         data["B"], data["B_std"], data["B_16"], data["B_med"], data["B_84"] = (
-            B  #  magnetic field magnitude (may need to use volume).
+            B_stats  #  magnetic field magnitude (may need to use volume).
         )
         data["Ne"], data["Ne_std"], data["Ne_16"], data["Ne_med"], data["Ne_84"] = (
-            Ne  #  number e- per H nucleon.
+            Ne_stats  #  number e- per H nucleon.
         )
         (
             data["rho"],
@@ -834,7 +834,7 @@ class SnapshotGasProperties:
             data["rho_16"],
             data["rho_med"],
             data["rho_84"],
-        ) = rho  # Average mass density
+        ) = rho_stats  # Average mass density
         data["sig_3D"] = sig_3D  # Average velocity dispersion.
         data["E_grav"] = E_grav  # Gravitational potential energy.
         data["E_kin"] = E_kin  # Kinetic energy.
