@@ -49,6 +49,34 @@ GAS_DATA_DTYPE = [
 ]
 
 
+def weighted_percentile(data, weights, percentile):
+    """Calculates the weighted percentile of a 1D array."""
+    if weights is None:
+        return np.percentile(data, percentile)
+
+    # Sort data and weights synchronously
+    ix = np.argsort(data)
+    data, weights = data[ix], weights[ix]
+
+    # Compute the cumulative distribution of weights -- following numpy percentile
+    cum_weights = np.cumsum(weights)
+    cum_weights /= np.sum(weights)
+    values_count = len(data)
+    if np.any(cum_weights[0, ...] == 0):
+        cum_weights[cum_weights == 0] = -1
+
+    def find_cdf_1d(arr, cdf):
+        indices = np.searchsorted(cdf, percentile / 100, side="left")
+        # We might have reached the maximum with i = len(arr), e.g. for
+        # percentile = 1, and need to cut it to len(arr) - 1.
+        indices = np.minimum(indices, values_count - 1)
+        result = np.take(arr, indices, axis=0)
+        return result
+
+    # Interpolate to find the data value at the desired percentile
+    return find_cdf_1d(data, cum_weights)
+
+
 class SinkAccretionHistory:
     """
     Class for getting particle IDs and accretion times for all gas particles to
@@ -681,9 +709,13 @@ class SnapshotGasProperties:
         assert np.isclose(np.average(X, weights=w), self.weight_avg(X, w))
         ##NOTE: USE DDOF=1 TO GET AN UNBIASED ESTIMATOR OF THE STANDARD DEVIATION(!)
         assert np.isclose(np.sqrt(np.cov(X, aweights=w, ddof=0)), self.weight_std(X, w))
-        np.average(X, weights=w), np.sqrt(np.cov(X, aweights=w, ddof=0)), np.percentile(
-            X, 16, weights=w
-        ), np.percentile(X, 50, weights=w), np.percentile(X, 84, weights=w)
+        np.average(X, weights=w), np.sqrt(
+            np.cov(X, aweights=w, ddof=0)
+        ), weighted_percentile(X, w, 16), weighted_percentile(
+            X, w, 50
+        ), weighted_percentile(
+            X, w, 84
+        )
 
     # Get average (wass-weighted) temperature [K].
     def get_average_temperature(self, m, T_k):
