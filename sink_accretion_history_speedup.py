@@ -709,12 +709,12 @@ class SnapshotGasProperties:
         assert np.isclose(np.average(X, weights=w), self.weight_avg(X, w))
         ##NOTE: USE DDOF=1 TO GET AN UNBIASED ESTIMATOR OF THE STANDARD DEVIATION(!)
         assert np.isclose(np.sqrt(np.cov(X, aweights=w, ddof=0)), self.weight_std(X, w))
-        np.average(X, weights=w), np.sqrt(
-            np.cov(X, aweights=w, ddof=0)
-        ), weighted_percentile(X, w, 16), weighted_percentile(
-            X, w, 50
-        ), weighted_percentile(
-            X, w, 84
+        return (
+            np.average(X, weights=w),
+            np.sqrt(np.cov(X, aweights=w, ddof=0)),
+            weighted_percentile(X, w, 16),
+            weighted_percentile(X, w, 50),
+            weighted_percentile(X, w, 84),
         )
 
     # Get average (wass-weighted) temperature [K].
