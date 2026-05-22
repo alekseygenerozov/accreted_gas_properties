@@ -44,8 +44,8 @@ GAS_DATA_DTYPE = [
     ("E_kin", np.float64),
     ("E_mag", np.float64),
     ("E_int", np.float64),
-    ("included_particle_number", np.int64),
-    ("feedback_particle_number", np.int64),
+    ("N_inc", np.int64),
+    ("N_fb", np.int64),
 ]
 
 
