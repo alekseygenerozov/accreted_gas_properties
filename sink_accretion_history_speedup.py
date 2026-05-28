@@ -683,7 +683,13 @@ class SnapshotGasProperties:
             return np.asarray([0.0, 0.0, 0.0]), 0.0
         m_cm, x_cm, v_cm = self.get_center_of_mass(m, pos, vel)
         m_g, x_g, v_g = self.get_relative_kinematics(m, pos, vel, x_cm, v_cm)
-        ang_mom_vec = np.sum(np.cross(x_g, v_g), axis=0)
+        # ang_mom_vec = np.sum(np.cross(x_g, v_g), axis=0)
+        ang_mom_vec = (
+            np.sum(
+                np.cross(x_g, np.multiply(np.reshape(m_g, (len(m_g), 1)), v_g)), axis=0
+            )
+            / m_cm
+        )
         ang_mom_mag = np.linalg.norm(ang_mom_vec)
         ang_mom_unit_vec = ang_mom_vec / ang_mom_mag
         return ang_mom_unit_vec, ang_mom_mag
