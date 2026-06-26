@@ -11,6 +11,9 @@ import pytreegrav as pg
 GAS_DATA_DTYPE = [
     ("sink_id", np.int64),
     ("M_tot", np.float64),
+    ("x_peak_1", np.float64),
+    ("x_peak_2", np.float64),
+    ("x_peak_3", np.float64),
     ("x_cm_1", np.float64),
     ("x_cm_2", np.float64),
     ("x_cm_3", np.float64),
@@ -610,6 +613,10 @@ class SnapshotGasProperties:
 
         return idx_g, num_excluded
 
+    def get_density_peak(self, pos, rho):
+        peak_idx = np.argmax(rho)
+        return pos[peak_idx]
+
     # Get center of mass for selected gas particles.
     def get_center_of_mass(self, m, pos, vel):
         M = np.sum(m)
@@ -787,6 +794,7 @@ class SnapshotGasProperties:
 
         # Compute gas properties.
         M_tot, x_cm, v_cm = self.get_center_of_mass(m, pos, vel)
+        x_peak = self.get_density_peak(rho, pos)
         L_unit_vec, L_mag = self.get_specific_angular_momentum(m, pos, vel)
         L_vec = L_mag * L_unit_vec
         R_eff = self.get_effective_radius(m, rho)
@@ -814,6 +822,9 @@ class SnapshotGasProperties:
         N_fb = num_feedback + num_feedback_new
 
         data["M_tot"] = M_tot  # Total mass.
+        data["x_peak_1"], data["x_peak_2"], data["x_peak_3"] = (
+            x_peak  # Density peak coordinates.
+        )
         data["x_cm_1"], data["x_cm_2"], data["x_cm_3"] = (
             x_cm  # Center of mass coordinates.
         )
