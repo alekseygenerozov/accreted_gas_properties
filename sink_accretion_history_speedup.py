@@ -794,7 +794,7 @@ class SnapshotGasProperties:
 
         # Compute gas properties.
         M_tot, x_cm, v_cm = self.get_center_of_mass(m, pos, vel)
-        x_peak = self.get_density_peak(rho, pos)
+        x_peak = self.get_density_peak(pos, rho)
         L_unit_vec, L_mag = self.get_specific_angular_momentum(m, pos, vel)
         L_vec = L_mag * L_unit_vec
         R_eff = self.get_effective_radius(m, rho)
