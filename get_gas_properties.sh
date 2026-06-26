@@ -1,12 +1,12 @@
 #!/bin/bash
 
-#SBATCH -J get_sink_data
-#SBATCH -p development
+#SBATCH -J get_acc_data
+#SBATCH -p small # Queue
+#SBATCH -o acc_data_%j.o # Name of stdout output file 
+#SBATCH -e acc_data_%j.e # Name of stderr error file
 #SBATCH -N 1
 #SBATCH -n 1
-#SBATCH -t 02:00:00
-#SBATCH --mail-user=ninaf@utexas.edu
-#SBATCH --mail-type=all
+#SBATCH -t 24:00:00
 #SBATCH -A AST23034
 
 # source $HOME/.bashrc
