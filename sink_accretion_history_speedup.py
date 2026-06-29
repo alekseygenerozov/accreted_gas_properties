@@ -14,7 +14,7 @@ GAS_DATA_DTYPE = [
     ("x_peak_1", np.float64),
     ("x_peak_2", np.float64),
     ("x_peak_3", np.float64),
-    ("max_dist_peak", np.float64)
+    ("max_dist_peak", np.float64),
     ("x_cm_1", np.float64),
     ("x_cm_2", np.float64),
     ("x_cm_3", np.float64),
@@ -828,7 +828,7 @@ class SnapshotGasProperties:
         data["x_peak_1"], data["x_peak_2"], data["x_peak_3"] = (
             x_peak  # Density peak coordinates.
         )
-        data["max_dist_peak"]
+        data["max_dist_peak"] = max_dist_peak
         data["x_cm_1"], data["x_cm_2"], data["x_cm_3"] = (
             x_cm  # Center of mass coordinates.
         )
@@ -953,7 +953,8 @@ class SnapshotGasProperties:
 
         if use_all_sinks:
             fname = os.path.join(
-                datadir, "snapshot_{0:03d}_accreted_gas_properties_{1}.pq".format(i, max_dist)
+                datadir,
+                "snapshot_{0:03d}_accreted_gas_properties_{1}.pq".format(i, max_dist),
             )
         else:
             fname = os.path.join(
