@@ -14,6 +14,7 @@ GAS_DATA_DTYPE = [
     ("x_peak_1", np.float64),
     ("x_peak_2", np.float64),
     ("x_peak_3", np.float64),
+    ("max_dist_peak", np.float64)
     ("x_cm_1", np.float64),
     ("x_cm_2", np.float64),
     ("x_cm_3", np.float64),
@@ -795,6 +796,8 @@ class SnapshotGasProperties:
         # Compute gas properties.
         M_tot, x_cm, v_cm = self.get_center_of_mass(m, pos, vel)
         x_peak = self.get_density_peak(pos, rho)
+        max_dist_peak = max([np.linalg.norm(row - x_peak) for row in pos])
+
         L_unit_vec, L_mag = self.get_specific_angular_momentum(m, pos, vel)
         L_vec = L_mag * L_unit_vec
         R_eff = self.get_effective_radius(m, rho)
@@ -825,6 +828,7 @@ class SnapshotGasProperties:
         data["x_peak_1"], data["x_peak_2"], data["x_peak_3"] = (
             x_peak  # Density peak coordinates.
         )
+        data["max_dist_peak"]
         data["x_cm_1"], data["x_cm_2"], data["x_cm_3"] = (
             x_cm  # Center of mass coordinates.
         )
@@ -864,6 +868,15 @@ class SnapshotGasProperties:
 
         return data
 
+    def get_filt_peak(self, idx_g, max_dist=np.inf):
+        rho = self.p0_rho[idx_g]
+        x, y, z = self.p0_x[idx_g], self.p0_y[idx_g], self.p0_z[idx_g]
+        pos = np.vstack((x, y, z)).T
+        x_peak = self.get_density_peak(pos, rho)
+
+        dist = np.array([np.linalg.norm(row - x_peak) for row in pos])
+        return idx_g[dist < max_dist]
+
     # Get gas properties for each set of gas_ids in accretion_dict.
     def get_all_gas_data(
         self,
@@ -873,6 +886,7 @@ class SnapshotGasProperties:
         use_all_sinks=True,
         sink_imin=None,
         sink_imax=None,
+        max_dist=np.inf,
     ):
 
         # Unique sink IDs:
@@ -906,6 +920,8 @@ class SnapshotGasProperties:
 
             # Get idx of unique accreted non-feedback gas particles.
             idx_g, num_feedback_new = self.get_idx(acc_gas_ids)
+            ##Getting only particles within max_dist of density peak...
+            idx_g = self.get_filt_peak(idx_g, max_dist=max_dist)
             if len(idx_g) == 0:
                 continue
 
@@ -924,20 +940,26 @@ class SnapshotGasProperties:
 
     # Write gas properties data to HDF5 file.
     def write_to_file(
-        self, all_data, datadir, use_all_sinks=True, sink_imin=None, sink_imax=None
+        self,
+        all_data,
+        datadir,
+        use_all_sinks=True,
+        sink_imin=None,
+        sink_imax=None,
+        max_dist=np.inf,
     ):
 
         i = self.get_i()
 
         if use_all_sinks:
             fname = os.path.join(
-                datadir, "snapshot_{0:03d}_accreted_gas_properties.pq".format(i)
+                datadir, "snapshot_{0:03d}_accreted_gas_properties_{1}.pq".format(i, max_dist)
             )
         else:
             fname = os.path.join(
                 datadir,
-                "snapshot_{0:03d}_accreted_gas_properties_range_{1:d}_{2:d}.pq".format(
-                    i, sink_imin, sink_imax
+                "snapshot_{0:03d}_accreted_gas_properties_range_{1:d}_{2:d}_{3}.pq".format(
+                    i, sink_imin, sink_imax, max_dist
                 ),
             )
         all_data = pd.DataFrame(data=all_data)

@@ -45,6 +45,7 @@ i_min, i_max = 0, 489  # fiducial_42
 # Set sink particle range (split into batches of ~20 sink particles).
 sink_imin, sink_imax = 0, 99
 use_all_sinks = True
+max_dist = 0.01
 
 # Loop over snapshots.
 for i in range(i_min, i_max + 1, 1):
@@ -57,6 +58,7 @@ for i in range(i_min, i_max + 1, 1):
         use_all_sinks=use_all_sinks,
         sink_imin=sink_imin,
         sink_imax=sink_imax,
+        max_dist=max_dist,
     )
     s.write_to_file(
         all_data,
@@ -64,4 +66,5 @@ for i in range(i_min, i_max + 1, 1):
         use_all_sinks=use_all_sinks,
         sink_imin=sink_imin,
         sink_imax=sink_imax,
+        max_dist=max_dist,
     )
