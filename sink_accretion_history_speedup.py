@@ -920,6 +920,8 @@ class SnapshotGasProperties:
 
             # Get idx of unique accreted non-feedback gas particles.
             idx_g, num_feedback_new = self.get_idx(acc_gas_ids)
+            if len(idx_g) == 0:
+                continue
             ##Getting only particles within max_dist of density peak...
             idx_g = self.get_filt_peak(idx_g, max_dist=max_dist)
             if len(idx_g) == 0:
