@@ -443,9 +443,9 @@ class SnapshotGasProperties:
         # uniqueness check in list of matching particle IDs in snapshot.
 
         # Open HDF5 file.
-        with h5py.File(fname, "r") as f:
-            header = f["Header"]
-            p0 = f["PartType0"]  # Particle type 0 (gas).
+        with h5py.File(fname, "r") as ff:
+            header = ff["Header"]
+            p0 = ff["PartType0"]  # Particle type 0 (gas).
 
             # Header attributes.
             self.box_size = header.attrs["BoxSize"]
@@ -563,7 +563,7 @@ class SnapshotGasProperties:
             self.id_counts[unique_ids] = counts
 
             self.star_soft = 8.73e-5
-            if "PartType5" in f.keys():
+            if "PartType5" in ff:
                 stars = f["PartType5"]  # Particle type 5 (sink/star).
                 self.stars_x = stars["Coordinates"][()][:, 0].astype(
                     float
