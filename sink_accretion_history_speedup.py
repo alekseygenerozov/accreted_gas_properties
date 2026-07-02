@@ -562,6 +562,7 @@ class SnapshotGasProperties:
             self.id_counts = np.zeros(max_id + 1, dtype=np.int64)
             self.id_counts[unique_ids] = counts
 
+            self.star_soft = 8.73e-5
             if "PartType5" in f:
                 stars = f["PartType5"]  # Particle type 5 (sink/star).
                 self.stars_x = stars["Coordinates"][()][:, 0].astype(
@@ -577,7 +578,6 @@ class SnapshotGasProperties:
                 # self.stars_hsml = stars["SinkRadius"][()].astype(
                 #     float
                 # )  # star Smoothing length.
-                self.star_soft = 8.73e-5
                 self.stars_hsml = np.ones(len(self.stars_m)) * self.star_soft
 
                 pos_all = np.vstack((self.p0_coord, self.stars_coord))
@@ -836,7 +836,7 @@ class SnapshotGasProperties:
             [x_peak],
             None,
             None,
-            softening_target=[self.star_soft],
+            softening_target=[self.p0_hsml[peak_idx]],
             tree=self.tree,
             theta=0.5,
             G=self.G_code,
