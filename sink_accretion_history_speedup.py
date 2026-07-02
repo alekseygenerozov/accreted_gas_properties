@@ -446,7 +446,6 @@ class SnapshotGasProperties:
         with h5py.File(fname, "r") as f:
             header = f["Header"]
             p0 = f["PartType0"]  # Particle type 0 (gas).
-            stars = f["PartType5"]  # Particle type 5 (sink/star).
 
             # Header attributes.
             self.box_size = header.attrs["BoxSize"]
@@ -562,22 +561,32 @@ class SnapshotGasProperties:
             # 4. Map the counts directly to their ID slots
             self.id_counts = np.zeros(max_id + 1, dtype=np.int64)
             self.id_counts[unique_ids] = counts
-            self.stars_x = stars["Coordinates"][()][:, 0].astype(
-                float
-            )  # star Coordinates.
-            self.stars_y = stars["Coordinates"][()][:, 1].astype(float)
-            self.stars_z = stars["Coordinates"][()][:, 2].astype(float)
-            self.stars_coord = np.vstack((self.stars_x, self.stars_y, self.stars_z)).T
-            self.stars_m = stars["Masses"][()].astype(float)  # star Masses.
-            # self.stars_hsml = stars["SinkRadius"][()].astype(
-            #     float
-            # )  # star Smoothing length.
-            self.star_soft = 8.73e-5
-            self.stars_hsml = np.ones(len(self.stars_m)) * self.star_soft
 
-            pos_all = np.vstack((self.p0_coord, self.stars_coord))
-            mass_all = np.concatenate((self.p0_m, self.stars_m))
-            soft_all = np.concatenate((self.p0_hsml, self.stars_hsml))
+            if "PartType5" in f:
+                stars = f["PartType5"]  # Particle type 5 (sink/star).
+                self.stars_x = stars["Coordinates"][()][:, 0].astype(
+                    float
+                )  # star Coordinates.
+
+                self.stars_y = stars["Coordinates"][()][:, 1].astype(float)
+                self.stars_z = stars["Coordinates"][()][:, 2].astype(float)
+                self.stars_coord = np.vstack(
+                    (self.stars_x, self.stars_y, self.stars_z)
+                ).T
+                self.stars_m = stars["Masses"][()].astype(float)  # star Masses.
+                # self.stars_hsml = stars["SinkRadius"][()].astype(
+                #     float
+                # )  # star Smoothing length.
+                self.star_soft = 8.73e-5
+                self.stars_hsml = np.ones(len(self.stars_m)) * self.star_soft
+
+                pos_all = np.vstack((self.p0_coord, self.stars_coord))
+                mass_all = np.concatenate((self.p0_m, self.stars_m))
+                soft_all = np.concatenate((self.p0_hsml, self.stars_hsml))
+            else:
+                pos_all = self.p0_coord
+                mass_all = self.p0_m
+                soft_all = self.p0_hsml
 
             start = time.time()
             print(
