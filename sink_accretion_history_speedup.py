@@ -563,7 +563,7 @@ class SnapshotGasProperties:
             self.id_counts[unique_ids] = counts
 
             self.star_soft = 8.73e-5
-            if "PartType5" in f:
+            if "PartType5" in f.keys():
                 stars = f["PartType5"]  # Particle type 5 (sink/star).
                 self.stars_x = stars["Coordinates"][()][:, 0].astype(
                     float
