@@ -833,10 +833,10 @@ class SnapshotGasProperties:
         x_peak, peak_idx = self.get_density_peak(pos, rho)
         max_dist_peak = max([np.linalg.norm(row - x_peak) for row in pos])
         PE_global = pg.PotentialTarget(
-            [x_peak],
+            np.atleast_2d(x_peak),
             None,
             None,
-            softening_target=[self.p0_hsml[peak_idx]],
+            softening_target=np.atleast_1d(self.p0_hsml[peak_idx]),
             tree=self.tree,
             theta=0.5,
             G=self.G_code,
