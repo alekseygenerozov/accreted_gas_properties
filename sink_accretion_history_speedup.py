@@ -2,6 +2,7 @@
 
 import glob
 import os
+import time
 
 import h5py
 import numpy as np
@@ -578,7 +579,12 @@ class SnapshotGasProperties:
             mass_all = np.concatenate((self.p0_m, self.stars_m))
             soft_all = np.concatenate((self.p0_hsml, self.stars_hsml))
 
+            start = time.time()
+            print(
+                "Computing tree",
+            )
             self.tree = pg.ConstructTree(pos_all, mass_all, softening=soft_all)
+            print("Tree done", f"{time.time() - start:.2g}")
 
     # Try to get snapshot number from filename.
     def get_i(self):
