@@ -55,6 +55,7 @@ GAS_DATA_DTYPE = [
     ("E_int", np.float64),
     ("N_inc", np.int64),
     ("N_fb", np.int64),
+    ("PE_global", np.float64),
 ]
 
 
@@ -444,6 +445,7 @@ class SnapshotGasProperties:
         with h5py.File(fname, "r") as f:
             header = f["Header"]
             p0 = f["PartType0"]  # Particle type 0 (gas).
+            stars = f["PartType5"]  # Particle type 5 (sink/star).
 
             # Header attributes.
             self.box_size = header.attrs["BoxSize"]
@@ -559,6 +561,24 @@ class SnapshotGasProperties:
             # 4. Map the counts directly to their ID slots
             self.id_counts = np.zeros(max_id + 1, dtype=np.int64)
             self.id_counts[unique_ids] = counts
+            self.stars_x = stars["Coordinates"][()][:, 0].astype(
+                float
+            )  # star Coordinates.
+            self.stars_y = stars["Coordinates"][()][:, 1].astype(float)
+            self.stars_z = stars["Coordinates"][()][:, 2].astype(float)
+            self.stars_coord = np.vstack((self.stars_x, self.stars_y, self.stars_z)).T
+            self.stars_m = stars["Masses"][()].astype(float)  # star Masses.
+            # self.stars_hsml = stars["SinkRadius"][()].astype(
+            #     float
+            # )  # star Smoothing length.
+            self.star_soft = 8.73e-5
+            self.stars_hsml = np.ones(len(self.stars_m)) * self.star_soft
+
+            pos_all = np.vstack((self.p0_coord, self.stars_coord))
+            mass_all = np.concatenate((self.p0_m, self.stars_m))
+            soft_all = np.concatenate((self.p0_hsml, self.stars_hsml))
+
+            self.tree = pg.ConstructTree(pos_all, mass_all, softening=soft_all)
 
     # Try to get snapshot number from filename.
     def get_i(self):
@@ -616,7 +636,7 @@ class SnapshotGasProperties:
 
     def get_density_peak(self, pos, rho):
         peak_idx = np.argmax(rho)
-        return pos[peak_idx]
+        return pos[peak_idx], peak_idx
 
     # Get center of mass for selected gas particles.
     def get_center_of_mass(self, m, pos, vel):
@@ -795,8 +815,18 @@ class SnapshotGasProperties:
 
         # Compute gas properties.
         M_tot, x_cm, v_cm = self.get_center_of_mass(m, pos, vel)
-        x_peak = self.get_density_peak(pos, rho)
+        x_peak, peak_idx = self.get_density_peak(pos, rho)
         max_dist_peak = max([np.linalg.norm(row - x_peak) for row in pos])
+        PE_global = pg.PotentialTarget(
+            [x_peak],
+            None,
+            None,
+            softening_target=[self.star_soft],
+            tree=self.tree,
+            theta=0.5,
+            G=self.G_code,
+        )
+        print(PE_global)
 
         L_unit_vec, L_mag = self.get_specific_angular_momentum(m, pos, vel)
         L_vec = L_mag * L_unit_vec
@@ -865,6 +895,7 @@ class SnapshotGasProperties:
         data["N_fb"] = (
             N_fb  # Number of gas particles excluded due to being (presumed) feedback particles.
         )
+        data["PE_global"] = PE_global
 
         return data
 
@@ -872,7 +903,7 @@ class SnapshotGasProperties:
         rho = self.p0_rho[idx_g]
         x, y, z = self.p0_x[idx_g], self.p0_y[idx_g], self.p0_z[idx_g]
         pos = np.vstack((x, y, z)).T
-        x_peak = self.get_density_peak(pos, rho)
+        x_peak, peak_idx = self.get_density_peak(pos, rho)
 
         dist = np.array([np.linalg.norm(row - x_peak) for row in pos])
         return idx_g[dist < max_dist]
