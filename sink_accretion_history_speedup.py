@@ -1002,7 +1002,7 @@ class SnapshotGasProperties:
                 * 1e6
                 / 2.4703e4
             )
-            print(f"First snap: {first_snap}")
+            print(f"Sink ID: {sink_ID} First snap: {first_snap}")
             if self.snap_number != int(first_snap):
                 continue
 
