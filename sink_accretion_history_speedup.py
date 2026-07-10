@@ -1001,7 +1001,7 @@ class SnapshotGasProperties:
                 if sink_ID not in self.first_snap_table.index:
                     print(f"Warning {sink_ID} is not in index!!!")
                     continue
-                first_snap = self.first_snap_table.loc[sink_ID]
+                first_snap = self.first_snap_table.loc[sink_ID]["snap"]
                 print(f"Sink ID: {sink_ID} First snap: {first_snap}")
                 if self.snap_number != int(first_snap) - 1:
                     continue
