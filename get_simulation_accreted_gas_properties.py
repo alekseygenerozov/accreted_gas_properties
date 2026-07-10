@@ -56,7 +56,7 @@ if os.path.exists("first_snap_table.pq"):
 for i in range(i_min, i_max + 1, 1):
 
     print("Writing snapshot {0:d}...".format(i), flush=True)
-    s = SnapshotGasProperties(get_fname(i), cloud)
+    s = SnapshotGasProperties(get_fname(i), cloud, first_snap_table=first_snap_table)
     all_data = s.get_all_gas_data(
         acc_dict,
         skip_potential=False,
@@ -64,7 +64,6 @@ for i in range(i_min, i_max + 1, 1):
         sink_imin=sink_imin,
         sink_imax=sink_imax,
         max_dist=max_dist,
-        first_snap_table=first_snap_table,
     )
     s.write_to_file(
         all_data,
