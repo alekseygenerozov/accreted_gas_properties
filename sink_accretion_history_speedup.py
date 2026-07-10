@@ -1003,7 +1003,7 @@ class SnapshotGasProperties:
                     continue
                 first_snap = self.first_snap_table.loc[sink_ID]
                 print(f"Sink ID: {sink_ID} First snap: {first_snap}")
-                if self.snap_number != int(first_snap):
+                if self.snap_number != int(first_snap) - 1:
                     continue
                 # first_snap = (
                 #     min(acc_dict[sink_ID]["all_acc_times"])
