@@ -421,6 +421,7 @@ class SnapshotGasProperties:
         fname,
         cloud,
         B_unit=1e4,
+        first_snap_table=None,
     ):
 
         # Physical constants.
@@ -431,7 +432,7 @@ class SnapshotGasProperties:
         self.ELECTRONCHARGE_CGS = 4.8032e-10
         self.C_LIGHT_CGS = 2.9979e10
 
-        # self.first_snap_table = first_snap_table
+        self.first_snap_table = first_snap_table
         # Initial cloud parameters.
         self.fname = fname
         self.snapdir = self.get_snapdir()
@@ -996,15 +997,20 @@ class SnapshotGasProperties:
 
         # Loop over unique sinks.
         for j, sink_ID in enumerate(sink_IDs):
-            first_snap = (
-                min(acc_dict[sink_ID]["all_acc_times"])
-                * self.t_unit_myr
-                * 1e6
-                / 2.4703e4
-            )
-            print(f"Sink ID: {sink_ID} First snap: {first_snap}")
-            if self.snap_number != int(first_snap):
-                continue
+            if self.first_snap_table is not None:
+                if sink_ID not in self.first_snap_table.index:
+                    print(f"Warning {sink_ID} is not in index!!!")
+                    continue
+                first_snap = self.first_snap_table.loc[sink_ID]
+                print(f"Sink ID: {sink_ID} First snap: {first_snap}")
+                if self.snap_number != int(first_snap):
+                    continue
+                # first_snap = (
+                #     min(acc_dict[sink_ID]["all_acc_times"])
+                #     * self.t_unit_myr
+                #     * 1e6
+                #     / 2.4703e4
+                # )
 
             if verbose:
                 print("Getting data for sink ID {0:d}...".format(sink_ID), flush=True)

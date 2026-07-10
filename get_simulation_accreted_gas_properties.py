@@ -4,6 +4,7 @@ import os
 import sys
 
 import numpy as np
+import pandas as pd
 
 sys.path.append("/work/08381/nina_af/frontera/accreted_gas_properties")
 
@@ -46,6 +47,10 @@ i_min, i_max = 0, 489  #
 sink_imin, sink_imax = 0, 99
 use_all_sinks = True
 max_dist = 0.5
+first_snap_table = None
+if os.path.exists("first_snap_table.pq"):
+    first_snap_table = pd.read_parquet("first_snap_table.pq")
+
 
 # Loop over snapshots.
 for i in range(i_min, i_max + 1, 1):
@@ -59,7 +64,7 @@ for i in range(i_min, i_max + 1, 1):
         sink_imin=sink_imin,
         sink_imax=sink_imax,
         max_dist=max_dist,
-        # first_snap_table=first_snap_table,
+        first_snap_table=first_snap_table,
     )
     s.write_to_file(
         all_data,
