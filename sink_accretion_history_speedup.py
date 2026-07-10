@@ -57,6 +57,7 @@ GAS_DATA_DTYPE = [
     ("N_inc", np.int64),
     ("N_fb", np.int64),
     ("PE_global", np.float64),
+    ("num_stars", np.int64),
 ]
 
 
@@ -561,8 +562,14 @@ class SnapshotGasProperties:
             # 4. Map the counts directly to their ID slots
             self.id_counts = np.zeros(max_id + 1, dtype=np.int64)
             self.id_counts[unique_ids] = counts
-
             self.star_soft = 8.73e-5
+
+            self.stars_x = np.zeros(0)
+            self.stars_y = np.zeros(0)
+            self.stars_z = np.zeros(0)
+            self.stars_m = np.zeros(0)
+            self.stars_coord = np.vstack((self.stars_x, self.stars_y, self.stars_z)).T
+            self.stars_hsml = np.ones(0) * self.star_soft
             if "PartType5" in ff:
                 stars = ff["PartType5"]  # Particle type 5 (sink/star).
                 self.stars_x = stars["Coordinates"][()][:, 0].astype(
@@ -923,6 +930,26 @@ class SnapshotGasProperties:
         dist = np.array([np.linalg.norm(row - x_peak) for row in pos])
         return idx_g[dist < max_dist]
 
+    def get_filt_peak_two_array(self, idx_g, idx_g_all, max_dist=np.inf, star=False):
+        ##PEAK FROM FIRST ARRAY
+        rho = self.p0_rho[idx_g]
+        x, y, z = self.p0_x[idx_g], self.p0_y[idx_g], self.p0_z[idx_g]
+        pos = np.vstack((x, y, z)).T
+        x_peak, peak_idx = self.get_density_peak(pos, rho)
+        ##POS FROM SECOND ARRAY
+        if star:
+            x, y, z = (
+                self.stars_x[idx_g_all],
+                self.stars_y[idx_g_all],
+                self.stars_z[idx_g_all],
+            )
+        else:
+            x, y, z = self.p0_x[idx_g_all], self.p0_y[idx_g_all], self.p0_z[idx_g_all]
+        pos = np.vstack((x, y, z)).T
+
+        dist_sq = np.sum((pos - x_peak) ** 2.0, axis=1)
+        return idx_g_all[dist_sq < max_dist**2]
+
     # Get gas properties for each set of gas_ids in accretion_dict.
     def get_all_gas_data(
         self,
@@ -953,6 +980,11 @@ class SnapshotGasProperties:
         # all_data = np.zeros((num_sinks, 25))  # Entry 0: sink ID.
         # Initialize the global structured tracking array
         all_data = np.zeros(num_sinks, dtype=GAS_DATA_DTYPE)
+        idx_g_all, num_feedback_new = self.get_idx(
+            self.p0_ids,
+        )
+        ##PLACEHOLDER -- SINCE THIS IS NO LONGER MEANINGFUL FOR THE NEW OUTPUT
+        num_feedback_new = -1
 
         # Loop over unique sinks.
         for j, sink_ID in enumerate(sink_IDs):
@@ -962,20 +994,38 @@ class SnapshotGasProperties:
 
             # Get particle IDs of accreted non-feedback gas particles.
             acc_gas_ids = acc_dict[sink_ID]["non_fb_ids"]
-            num_feedback = np.sum(acc_dict[sink_ID]["fb_counts"])
+            # num_feedback = np.sum(acc_dict[sink_ID]["fb_counts"])
+            ##PLACEHOLDER SINCE THIS IS NO LONGER MEANINGFUL
+            num_feedback = -1
 
             # Get idx of unique accreted non-feedback gas particles.
             idx_g, num_feedback_new = self.get_idx(acc_gas_ids)
-            if len(idx_g) == 0:
-                continue
-            ##Getting only particles within max_dist of density peak...
-            idx_g = self.get_filt_peak(idx_g, max_dist=max_dist)
+            ##PLACEHOLDER -- SINCE THIS IS NO LONGER MEANINGFUL FOR THE NEW OUTPUT
+            num_feedback_new = -1
             if len(idx_g) == 0:
                 continue
 
+            ##FINDING PARTICLES OF 2ND ARRAY WITHIN MAX_DIST OF DENSITY PEAK FROM 1ST ARRAY.
+            idx_g_all_filtered = self.get_filt_peak_two_array(
+                idx_g,
+                idx_g_all,
+                max_dist=max_dist,
+            )
+            if len(idx_g_all_filtered) == 0:
+                continue
+            idx_star = self.get_filt_peak_two_array(
+                idx_g,
+                np.arange(len(self.stars_x)).astype(int),
+                max_dist=max_dist,
+                star=True,
+            )
+
             # Get gas properties.
             data = self.get_gas_data(
-                idx_g, num_feedback, num_feedback_new, skip_potential=skip_potential
+                idx_g_all_filtered,
+                num_feedback,
+                num_feedback_new,
+                skip_potential=skip_potential,
             )
             # all_data[j, 0] = sink_ID  # Record sink ID.
             # all_data[j, 1:] = data
@@ -983,6 +1033,7 @@ class SnapshotGasProperties:
             all_data[j]["sink_id"] = sink_ID
             for field in data.dtype.names:
                 all_data[j][field] = data[field]
+            all_data[j]["num_stars"] = len(idx_star)
 
         return all_data
 
