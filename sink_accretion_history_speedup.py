@@ -435,7 +435,7 @@ class SnapshotGasProperties:
         # Initial cloud parameters.
         self.fname = fname
         self.snapdir = self.get_snapdir()
-        self.snap_number = self.fname.split("snapshot_")[-1]
+        self.snap_number = int(self.fname.split("snapshot_")[-1].replace(".hdf5", ""))
         print(f"Snap number: {self.snap_number}")
         self.Cloud = cloud
         self.M0 = cloud.M  # Initial cloud mass, radius.
