@@ -997,7 +997,7 @@ class SnapshotGasProperties:
         # Loop over unique sinks.
         for j, sink_ID in enumerate(sink_IDs):
             first_snap = (
-                min(acc_dict[sink_ID]["accretion_times"])
+                min(acc_dict[sink_ID]["all_acc_times"])
                 * self.t_unit_myr
                 * 1e6
                 / 2.4703e4
