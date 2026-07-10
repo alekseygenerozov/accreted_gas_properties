@@ -18,7 +18,7 @@ from sink_accretion_history_speedup import (
 # datadir   = '/scratch/08381/nina_af/M2e3_R3_S0_T1_B0.01_Res126_n2_sol0.5_42/output/accreted_gas_properties_v2/'
 
 bhdir = "blackhole_details/"
-snapdir = "/scratch3/03532/mgrudic/STARFORGE_RT/STARFORGE_v1.1/M2e4_R10/M2e4_R10_S0_T1_B0.1_Res271_n2_sol0.5_1/output/"
+snapdir = "/scratch3/03532/mgrudic/STARFORGE_RT/STARFORGE_v1.1/M2e4_R10/M2e4_R10_S0_T1_B0.1_Res271_n2_sol0.5_42/output/"
 datadir = "./"
 
 # fname_gas = os.path.join(bhdir, "sink_accretion_data.txt")
@@ -40,12 +40,12 @@ def get_fname(i, snapdir=snapdir):
 
 
 # Set snapshot range (later: pass as argument/detect from snapshot directory?)
-i_min, i_max = 0, 464  #
+i_min, i_max = 0, 489  #
 
 # Set sink particle range (split into batches of ~20 sink particles).
 sink_imin, sink_imax = 0, 99
 use_all_sinks = True
-max_dist = 0.01
+max_dist = 0.5
 
 # Loop over snapshots.
 for i in range(i_min, i_max + 1, 1):
