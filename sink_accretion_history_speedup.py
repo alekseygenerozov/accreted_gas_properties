@@ -416,7 +416,12 @@ class SnapshotGasProperties:
     Read gas particle data from HDF5 snapshot.
     """
 
-    def __init__(self, fname, cloud, B_unit=1e4):
+    def __init__(
+        self,
+        fname,
+        cloud,
+        B_unit=1e4,
+    ):
 
         # Physical constants.
         self.PROTONMASS_CGS = 1.6726e-24
@@ -426,9 +431,12 @@ class SnapshotGasProperties:
         self.ELECTRONCHARGE_CGS = 4.8032e-10
         self.C_LIGHT_CGS = 2.9979e10
 
+        # self.first_snap_table = first_snap_table
         # Initial cloud parameters.
         self.fname = fname
         self.snapdir = self.get_snapdir()
+        self.snap_number = self.fname.split("snapshot_")[-1]
+        print(f"Snap number: {self.snap_number}")
         self.Cloud = cloud
         self.M0 = cloud.M  # Initial cloud mass, radius.
         self.R0 = cloud.R
@@ -988,6 +996,15 @@ class SnapshotGasProperties:
 
         # Loop over unique sinks.
         for j, sink_ID in enumerate(sink_IDs):
+            first_snap = (
+                min(acc_dict[sink_ID]["accretion_times"])
+                * self.t_unit_myr
+                * 1e6
+                / 2.4703e4
+            )
+            print(f"First snap: {first_snap}")
+            if self.snap != int(first_snap):
+                continue
 
             if verbose:
                 print("Getting data for sink ID {0:d}...".format(sink_ID), flush=True)

@@ -59,6 +59,7 @@ for i in range(i_min, i_max + 1, 1):
         sink_imin=sink_imin,
         sink_imax=sink_imax,
         max_dist=max_dist,
+        # first_snap_table=first_snap_table,
     )
     s.write_to_file(
         all_data,
