@@ -46,7 +46,7 @@ i_min, i_max = 0, 489  #
 # Set sink particle range (split into batches of ~20 sink particles).
 sink_imin, sink_imax = 0, 99
 use_all_sinks = True
-max_dist = 0.5
+max_dist = 0.1
 first_snap_table = None
 if os.path.exists("first_snap_table.pq"):
     first_snap_table = pd.read_parquet("first_snap_table.pq")
